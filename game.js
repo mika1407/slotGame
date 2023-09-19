@@ -110,13 +110,58 @@ const printRows = (rows) => {
         rowString += " | ";
       }
     }
-    console.log(rowString);
+    console.log("\x1b[31m%s\x1b[0m", rowString);
+    //"\x1b[31m%s\x1b[0m", is red color
   }
 };
 
-let balance = deposit()
-const numberOfLines = getNumberOfLines()
-const bet = getBet(balance, numberOfLines)
-const reels = spin()
-const rows = transpose(reels)
-printRows(rows)
+const getWinnings = (rows, bet, lines) => {
+  let winnings = 0;
+
+  for (let row = 0; row < lines; row++) {
+    const symbols = rows[row];
+    let allSame = true;
+
+    for (const symbol of symbols) {
+      if (symbol != symbols[0]) {
+        allSame = false;
+        break;
+      }
+    }
+
+    if (allSame) {
+      winnings += bet * SYMBOL_VALUES[symbols[0]];
+    }
+  }
+
+  return winnings;
+};
+
+const game = () => {
+  let balance = deposit()
+
+  while (true) {
+    const numberOfLines = getNumberOfLines()
+    const bet = getBet(balance, numberOfLines)
+    balance -= bet * numberOfLines;
+    const reels = spin()
+    const rows = transpose(reels)
+    printRows(rows)
+    const winnings = getWinnings(rows, bet, numberOfLines);
+    balance += winnings;
+    console.log("\x1b[32m%s\x1b[0m", "You won, $" + winnings.toString());
+    console.log('\x1b[33m%s\x1b[0m', "Your balance is now: "+ balance)
+
+    if (balance <= 0) {
+      console.log("\x1b[31m%s\x1b[0m","You ran out of money!")
+      break
+    }
+
+    const playAgain = prompt("Do you want to play again (y/n)? ")
+
+    if (playAgain != "y") break
+  }
+}
+
+game();
+
